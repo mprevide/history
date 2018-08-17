@@ -182,9 +182,9 @@ class DataHandler(KafkaEventHandler):
         if len(docs) > 0:
             try:
                 # timestamp of when data was saved to db
-                saved_timestamp = DataHandler.parse_datetime()
+                saved_timestamp = str(DataHandler.parse_datetime())
                 for d in docs:
-                    d['saved_ts'] = saved_timestamp
+                    d['saved_ts'] = str(saved_timestamp)
                 mongo = self._get_collection(data)
                 mongo.insert_many(docs)
             except Exception as error:
