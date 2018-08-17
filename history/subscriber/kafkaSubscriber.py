@@ -111,7 +111,7 @@ class DataHandler(KafkaEventHandler):
         return self.db['device_history'][collection_name]
 
     @staticmethod
-    def parse_datetime(timestamp):
+    def parse_datetime(timestamp=None):
         if timestamp is None:
             return datetime.utcnow()
 
@@ -158,6 +158,7 @@ class DataHandler(KafkaEventHandler):
             LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
             return
 
+        # timestamp of when data was sent from device
         timestamp = DataHandler.parse_datetime(metadata.get('timestamp', None))
 
         docs = []
@@ -180,6 +181,10 @@ class DataHandler(KafkaEventHandler):
 
         if len(docs) > 0:
             try:
+                # timestamp of when data was saved to db
+                saved_timestamp = str(DataHandler.parse_datetime())
+                for d in docs:
+                    d['saved_ts'] = str(saved_timestamp)
                 mongo = self._get_collection(data)
                 mongo.insert_many(docs)
             except Exception as error:
