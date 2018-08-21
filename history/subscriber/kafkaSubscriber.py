@@ -30,6 +30,8 @@ class DojotEventHandler(object):
     def __init__(self):
         self.client = None
         self.db = None
+        self.indexed = False
+        self.sharded = False
 
     def init_mongodb(self, collection_name=None):
         self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
@@ -40,11 +42,13 @@ class DojotEventHandler(object):
     def create_indexes(self, collection_name):
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+        self.indexed = True
 
     def enable_collection_sharding(self, collection_name):
         self.db[collection_name].create_index([('attr', pymongo.HASHED)])
         self.client.admin.command('enableSharding', self.db.name)
         self.client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
+        self.sharded = True
 
     def handle_event(self, message):
         """
@@ -113,9 +117,10 @@ class DeviceHandler(DojotEventHandler):
         if self.db is None:
             self.init_mongodb(collection_name)
 
-        self.create_indexes(collection_name)
+        if not self.indexed:
+            self.create_indexes(collection_name)
 
-        if conf.db_shard:
+        if conf.db_shard and not self.sharded:
             self.enable_collection_sharding(collection_name)
 
 
@@ -130,7 +135,7 @@ class DataHandler(DojotEventHandler):
         if self.db is None:
             self.init_mongodb(collection_name)
 
-        if conf.db_shard:
+        if conf.db_shard and not self.sharded:
             self.enable_collection_sharding(collection_name)
 
         return self.db[collection_name]
