@@ -27,28 +27,27 @@ class DojotEventHandler(object):
         Base callback structure for kafka events callbacks
     """
 
+    # mongodb static variables
+    client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+    db = client['device_history']
+    db_indexed = False
+    db_sharded = False
+
     def __init__(self):
-        self.client = None
-        self.db = None
-        self.indexed = False
-        self.sharded = False
+        pass
 
-    def init_mongodb(self, collection_name=None):
-        self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
-        self.db = self.client['device_history']
-        if collection_name:
-            self.create_indexes(collection_name)
+    @staticmethod
+    def create_indexes(collection_name):
+        DojotEventHandler.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
+        DojotEventHandler.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+        DojotEventHandler.db_indexed = True
 
-    def create_indexes(self, collection_name):
-        self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
-        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
-        self.indexed = True
-
-    def enable_collection_sharding(self, collection_name):
-        self.db[collection_name].create_index([('attr', pymongo.HASHED)])
-        self.client.admin.command('enableSharding', self.db.name)
-        self.client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
-        self.sharded = True
+    @staticmethod
+    def enable_collection_sharding(collection_name):
+        DojotEventHandler.db[collection_name].create_index([('attr', pymongo.HASHED)])
+        DojotEventHandler.client.admin.command('enableSharding', DojotEventHandler.db.name)
+        DojotEventHandler.client.admin.command('shardCollection', DojotEventHandler.db[collection_name].full_name, key={'attr': 'hashed'})
+        DojotEventHandler.db_sharded = True
 
     def handle_event(self, message):
         """
@@ -114,14 +113,11 @@ class DeviceHandler(DojotEventHandler):
 
         collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
 
-        if self.db is None:
-            self.init_mongodb(collection_name)
+        if not DojotEventHandler.db_indexed:
+            DojotEventHandler.create_indexes(collection_name)
 
-        if not self.indexed:
-            self.create_indexes(collection_name)
-
-        if conf.db_shard and not self.sharded:
-            self.enable_collection_sharding(collection_name)
+        if conf.db_shard and not DojotEventHandler.db_sharded:
+            DojotEventHandler.enable_collection_sharding(collection_name)
 
 
 class DataHandler(DojotEventHandler):
@@ -132,13 +128,10 @@ class DataHandler(DojotEventHandler):
     def _get_collection(self, message):
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
 
-        if self.db is None:
-            self.init_mongodb(collection_name)
+        if conf.db_shard and not DojotEventHandler.db_sharded:
+            DojotEventHandler.enable_collection_sharding(collection_name)
 
-        if conf.db_shard and not self.sharded:
-            self.enable_collection_sharding(collection_name)
-
-        return self.db[collection_name]
+        return DojotEventHandler.db[collection_name]
 
     @staticmethod
     def parse_datetime(timestamp):
