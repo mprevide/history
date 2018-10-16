@@ -21,9 +21,6 @@ def execute(cmd):
 def to_str(s):
     try:
         s = s.decode('utf8').strip()
-    except AttributeError:
-        pass
-    try:
         return json.loads(s)
     except:
         return s
