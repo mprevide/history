@@ -36,7 +36,7 @@ def delete_messages_mongodb(db):
     for coll in collections:
         db[coll].delete_many({'_id':{'$ne':0}})
 
-def main(tenant, messages, frequency, deviceid, n_threads, sleep=0):
+def main(tenant, messages, frequency, deviceid, n_threads, sleep):
     print('starting...')
     KAFKA_ENDPOINT = to_str(execute('docker inspect -f "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}" dojot_kafka_1')) + ':9092'
 
@@ -100,10 +100,9 @@ def createArgsParser():
     parser.add_argument('-f', '--frequency', required=True, type=int, help='frequency to send messages')
     parser.add_argument('-d', '--deviceid', required=True, help='device id whose messages are being sent to')
     parser.add_argument('-n', '--threads', default=1, type=int, help='number of threads (devices) to send messages')
-    parser.add_argument('-s', '--sleep', help='time to sleep')
+    parser.add_argument('-s', '--sleep', default=0, type=int, help='time to sleep')
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = createArgsParser()
-    sleep = int(args.sleep) if args.sleep else 0
-    main(args.tenant, args.messages, args.frequency, args.deviceid, args.threads, sleep)
+    main(args.tenant, args.messages, args.frequency, args.deviceid, args.threads, args.sleep)
