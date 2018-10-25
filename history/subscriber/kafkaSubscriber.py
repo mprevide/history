@@ -18,8 +18,29 @@ LOGGER = logging.getLogger('history.' + __name__)
 LOGGER.addHandler(logging.StreamHandler())
 LOGGER.setLevel(logging.INFO)
 
+
 class ConfigurationError(Exception):
     pass
+
+
+class MongoDB():
+    client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+    db = client['device_history']
+    db_indexed = False
+    db_sharded = False
+
+    @staticmethod
+    def create_indexes(collection_name):
+        MongoDB.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
+        MongoDB.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+        MongoDB.db_indexed = True
+
+    @staticmethod
+    def enable_collection_sharding(collection_name):
+        MongoDB.db[collection_name].create_index([('attr', pymongo.HASHED)])
+        MongoDB.client.admin.command('enableSharding', MongoDB.db.name)
+        MongoDB.client.admin.command('shardCollection', MongoDB.db[collection_name].full_name, key={'attr': 'hashed'})
+        MongoDB.db_sharded = True
 
 
 class DojotEventHandler(object):
@@ -27,31 +48,13 @@ class DojotEventHandler(object):
         Base callback structure for kafka events callbacks
     """
 
-    def __init__(self):
-        self.client = None
-        self.db = None
-
-    def init_mongodb(self, collection_name=None):
-        self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
-        self.db = self.client['device_history']
-        if collection_name:
-            self.create_indexes(collection_name)
-
-    def create_indexes(self, collection_name):
-        self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
-        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
-
-    def enable_collection_sharding(self, collection_name):
-        self.db[collection_name].create_index([('attr', pymongo.HASHED)])
-        self.client.admin.command('enableSharding', self.db.name)
-        self.client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
-
     def handle_event(self, message):
         """
             Handles a given kafka received message
             :param message The message that has been received
         """
         raise NotImplementedError("Abstract method called")
+
 
 class TenancyHandler(DojotEventHandler):
 
@@ -110,13 +113,11 @@ class DeviceHandler(DojotEventHandler):
 
         collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
 
-        if self.db is None:
-            self.init_mongodb(collection_name)
+        if not MongoDB.db_indexed:
+            MongoDB.create_indexes(collection_name)
 
-        self.create_indexes(collection_name)
-
-        if conf.db_shard:
-            self.enable_collection_sharding(collection_name)
+        if conf.db_shard and not MongoDB.db_sharded:
+            MongoDB.enable_collection_sharding(collection_name)
 
 
 class DataHandler(DojotEventHandler):
@@ -127,13 +128,10 @@ class DataHandler(DojotEventHandler):
     def _get_collection(self, message):
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
 
-        if self.db is None:
-            self.init_mongodb(collection_name)
+        if conf.db_shard and not MongoDB.db_sharded:
+            MongoDB.enable_collection_sharding(collection_name)
 
-        if conf.db_shard:
-            self.enable_collection_sharding(collection_name)
-
-        return self.db[collection_name]
+        return MongoDB.db[collection_name]
 
     @staticmethod
     def parse_datetime(timestamp):
