@@ -4,6 +4,8 @@ services:
   - mongodb
 python:
   - '3.6'
+before_install:
+  - npm install aglio
 install:
   - pip install -r requirements/requirements.txt -r tests/requirements.txt
   - npm install -g dredd@5.1.4 --no-optional
