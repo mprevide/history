@@ -40,7 +40,7 @@ class Persister:
         :param collection_name: collection to create index
         """
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
-        self.db[collection_name].create_index([('attr', pymongo.DESCENDING, 'ts', pymongo.DESCENDING)])
+        self.db[collection_name].create_index([('attr', pymongo.DESCENDING),('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
 
     def create_indexes_for_notifications(self, tenants):
