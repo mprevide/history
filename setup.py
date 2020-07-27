@@ -16,7 +16,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 def get_requirements(reqfile):
     path = os.path.join(HERE, reqfile)
     deps = list()
-    
+
     for dep in req.parse_requirements(path, session=download.PipSession()):
         try:
             # Pip 8.1.2 Compatible
