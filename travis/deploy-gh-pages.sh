@@ -2,13 +2,13 @@ git remote add -t gh-pages -f origin-gh-pages https://github.com/${TRAVIS_REPO_S
 git fetch origin-gh-pages
 git checkout gh-pages
 git checkout ${TRAVIS_BRANCH} -- ./docs
-mv docs/* . 
+mv docs/* .
 git rm -r docs
 
 if [ "${TRAVIS_BRANCH}" == "master" ]
-then 
+then
   export VERSION="latest"
-else 
+else
   export VERSION="${TRAVIS_BRANCH}"
 fi
 

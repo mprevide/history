@@ -5,7 +5,7 @@ services:
 python:
   - '3.6'
 install:
-  - pip install -r requirements/requirements.txt -r tests/requirements.txt
+  - pip install pip==19.0.3 -r requirements/requirements.txt -r tests/requirements.txt
   - npm install -g dredd@5.1.4 --no-optional
 before_script:
   - python setup.py install
