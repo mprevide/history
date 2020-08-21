@@ -41,6 +41,22 @@ def setup(transaction):
     _update_data['attrs']['temperature'] = "23.12"
     persister.handle_event_data("admin", json.dumps(_update_data))
 
+    _update_data = {
+        "metadata": {
+            "deviceid": "b374a5",
+            "protocol": "mqtt",
+            "payload": "json",
+            "timestamp": 1528226137452
+        },
+        "attrs": {
+            "temperature": "1013"
+        }
+    }
+    persister.handle_event_data("admin", json.dumps(_update_data))
+
+    _update_data['attrs']['temperature'] = "1033"
+    persister.handle_event_data("admin", json.dumps(_update_data))
+
     _new_tenant = {
         "tenant": "admin"
     }
