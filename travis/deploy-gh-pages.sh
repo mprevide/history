@@ -14,6 +14,8 @@ fi
 
 docker run --volume $(pwd):/temp:Z dojot/aglio -i /temp/history.apib -o - > ./apiary_${VERSION}.html
 
+echo "Don't worry about the above errors"
+
 git add apiary_${VERSION}.html
 git commit -m 'Updating gh-pages'
 git push http://${GITHUB_TOKEN}:x-oauth-basic@github.com/${TRAVIS_REPO_SLUG} gh-pages
