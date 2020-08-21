@@ -3,6 +3,7 @@ import json
 
 from history.subscriber.persister import Persister
 
+
 @hooks.before_each
 def setup(transaction):
 
@@ -12,7 +13,7 @@ def setup(transaction):
             "service": "admin"
         },
         "data": {
-            "id": "labtemp",
+            "id": "b374a5",
             "label": "Device 1",
             "templates": [1, 2, 3],
             "attrs": {
@@ -26,13 +27,14 @@ def setup(transaction):
 
     _update_data = {
         "metadata": {
-            "deviceid": "labtemp",
+            "deviceid": "b374a5",
             "protocol": "mqtt",
             "payload": "json",
             "timestamp": 1528226137452
         },
         "attrs": {
-            "temperature": "22.12"
+            "temperature": "22.12",
+            "pressure": "1013"
         }
     }
     persister.handle_event_data("admin", json.dumps(_update_data))
@@ -40,6 +42,14 @@ def setup(transaction):
     _update_data['attrs']['temperature'] = "23.12"
     persister.handle_event_data("admin", json.dumps(_update_data))
 
+    _update_data['attrs']['temperature'] = "24.10"
+    persister.handle_event_data("admin", json.dumps(_update_data))
+
+    _update_data['attrs']['pressure'] = "1033"
+    persister.handle_event_data("admin", json.dumps(_update_data))
+
+    _update_data['attrs']['pressure'] = "1053"
+    persister.handle_event_data("admin", json.dumps(_update_data))
 
     _new_tenant = {
         "tenant": "admin"
@@ -54,8 +64,8 @@ def setup(transaction):
             "level": 1,
             "shouldPersist": "True"
         },
-        "message": "DEU ALGUMA COISA MUITO ERRADO",
-        "subject": "debug"
+        "message": "Something went wrong.",
+        "subject": "user_notification",
     }
-    
+
     persister.handle_notification("admin", json.dumps(_notification))
