@@ -13,7 +13,7 @@ def setup(transaction):
             "service": "admin"
         },
         "data": {
-            "id": "labtemp",
+            "id": "b374a5",
             "label": "Device 1",
             "templates": [1, 2, 3],
             "attrs": {
@@ -54,8 +54,8 @@ def setup(transaction):
             "level": 1,
             "shouldPersist": "True"
         },
-        "message": "DEU ALGUMA COISA MUITO ERRADO",
-        "subject": "debug"
+        "message": "Something went wrong.",
+        "subject": "user_notification",
     }
 
     persister.handle_notification("admin", json.dumps(_notification))
