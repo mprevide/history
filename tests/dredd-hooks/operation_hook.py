@@ -49,7 +49,7 @@ def setup(transaction):
             "timestamp": 1528226137452
         },
         "attrs": {
-            "temperature": "1013"
+            "pressure": "1013"
         }
     }
     persister.handle_event_data("admin", json.dumps(_update_data))
