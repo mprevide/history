@@ -3,6 +3,7 @@ import json
 
 from history.subscriber.persister import Persister
 
+
 @hooks.before_each
 def setup(transaction):
 
@@ -26,7 +27,7 @@ def setup(transaction):
 
     _update_data = {
         "metadata": {
-            "deviceid": "labtemp",
+            "deviceid": "b374a5",
             "protocol": "mqtt",
             "payload": "json",
             "timestamp": 1528226137452
@@ -39,7 +40,6 @@ def setup(transaction):
 
     _update_data['attrs']['temperature'] = "23.12"
     persister.handle_event_data("admin", json.dumps(_update_data))
-
 
     _new_tenant = {
         "tenant": "admin"
@@ -57,5 +57,5 @@ def setup(transaction):
         "message": "DEU ALGUMA COISA MUITO ERRADO",
         "subject": "debug"
     }
-    
+
     persister.handle_notification("admin", json.dumps(_notification))
