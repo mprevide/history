@@ -73,27 +73,6 @@ If no query string is set, then all values from all attributes are returned.
               }
             ]
 
-+ Response 404 (application/json; charset=UTF-8)
-
-  This does not mean that there is no such device in the dojot, just that there is no history for that device yet.
-
-  + body
-
-            {
-              "title": "Device not found",
-              "description": "No data for the given device could be found"
-            }
-
-+ Response 404 (application/json; charset=UTF-8)
-
-  This does not mean that there is no such attribute on the device, only that there is no history for that attribute yet.
-
-  + body
-
-            {
-                "title": "Attr not found",
-                "description": "No data for the given attribute could be found"
-            }
 
 ## Filter by last N values and somes attributes  [/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}]
 
