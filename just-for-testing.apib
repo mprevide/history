@@ -1,0 +1,261 @@
+FORMAT: 1A
+HOST: http://localhost:8000/history
+
+# History
+
+This service is intended to provide an easy way to consume data associated to
+device attributes, such as temperature readinds, and notifications sent by
+other services.
+
+Note: The dates on this service use ISO 8601.
+
+# Group Retrieve data from attributes
+
+This endpoint retrieves the last values associated to a device. The query
+string might select more than one attribute. For instance:
+`?lastN=3&attr=temperature,pressure` will return the last 3 values from both
+`temperature` and `pressure` attributes.
+
+If no query string is set, then all values from all attributes are returned.
+
+
+## Filter by last N values and only one attribute  [/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}]
+
++ Parameters
+    + device_id:b374a5 (required, string) - Device identifier
+    + attr:temperature (optional, string) - Device attribute to be requested. If not used, returns all attributes. (It can be a comma-separated list of attributes.)
+    + dateFrom:`2018-06-05T18:00:00Z` (optional, string) - Start time of a time-based query
+    + dateTo:`2018-06-15T18:00:00Z` (optional, string) - End time of a time-based query
+    + lastN:3 (optional, number) - Number of most current values (valid for each attribute, if more than one).  You can use lastN with or without dateFrom/dateTo.
+
+
+### Filter by last N values and only one attribute [GET]
+
++ Request (application/json)
+  + Headers
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+  + body
+
+            [
+              {
+                "device_id": "b374a5",
+                "ts": "2018-02-14T13:43:33.306000Z",
+                "metadata": {
+                    "protocol": "mqtt",
+                    "payload": "json"
+                },
+                "value": "22.12",
+                "attr": "temperature"
+              },
+              {
+                "device_id": "b374a5",
+                "ts": "2018-02-14T13:42:33.306000Z",
+                "metadata": {
+                    "protocol": "mqtt",
+                    "payload": "json"
+                },
+                "value": "23.12",
+                "attr": "temperature"
+              },
+              {
+                "device_id": "b374a5",
+                "ts": "2018-02-14T13:41:33.306000Z",
+                "metadata": {
+                    "protocol": "mqtt",
+                    "payload": "json"
+                },
+                "value": "24.10",
+                "attr": "temperature"
+              }
+            ]
+
++ Response 404 (application/json; charset=UTF-8)
+
+  This does not mean that there is no such device in the dojot, just that there is no history for that device yet.
+
+  + body
+
+            {
+              "title": "Device not found",
+              "description": "No data for the given device could be found"
+            }
+
++ Response 404 (application/json; charset=UTF-8)
+
+  This does not mean that there is no such attribute on the device, only that there is no history for that attribute yet.
+
+  + body
+
+            {
+                "title": "Attr not found",
+                "description": "No data for the given attribute could be found"
+            }
+
+## Filter by last N values and somes attributes  [/device/{device_id}/history?lastN={lastN}&dateFrom={dateFrom}&dateTo={dateTo}]
+
++ Parameters
+    + device_id:b374a5 (required, string) - Device identifier
+    + dateFrom:`2018-06-05T18:00:00Z` (optional, string) - Start time of a time-based query
+    + dateTo:`2018-06-15T18:00:00Z` (optional, string) - End time of a time-based query
+    + lastN:3 (optional, number) - Number of most current values (valid for each attribute, if more than one). You can use lastN with or without dateFrom/dateTo.
+
+
+### Filter by last N values and somes attributes [GET]
+
++ Request (application/json)
+  + Headers
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+  + body
+            {
+              "temperature":
+                [
+                  {
+                    "device_id": "b374a5",
+                    "ts": "2018-02-14T13:43:33.306000Z",
+                    "metadata": {
+                        "protocol": "mqtt",
+                        "payload": "json"
+                    },
+                    "value": "22.12",
+                    "attr": "temperature"
+                  },
+                  {
+                    "device_id": "b374a5",
+                    "ts": "2018-02-14T13:42:33.306000Z",
+                    "metadata": {
+                        "protocol": "mqtt",
+                        "payload": "json"
+                    },
+                    "value": "23.12",
+                    "attr": "temperature"
+                  },
+                  {
+                    "device_id": "b374a5",
+                    "ts": "2018-02-14T13:41:33.306000Z",
+                    "metadata": {
+                        "protocol": "mqtt",
+                        "payload": "json"
+                    },
+                    "value": "24.10",
+                    "attr": "temperature"
+                  }
+                ],
+              "pressure":
+                [
+                  {
+                    "device_id": "b374a5",
+                    "ts": "2018-02-14T13:43:33.306000Z",
+                    "metadata": {
+                        "protocol": "mqtt",
+                        "payload": "json"
+                    },
+                    "value": "1013",
+                    "attr": "pressure"
+                  },
+                  {
+                    "device_id": "b374a5",
+                    "ts": "2018-02-14T13:42:33.306000Z",
+                    "metadata": {
+                        "protocol": "mqtt",
+                        "payload": "json"
+                    },
+                    "value": "1033",
+                    "attr": "pressure"
+                  },
+                  {
+                    "device_id": "b374a5",
+                    "ts": "2018-02-14T13:41:33.306000Z",
+                    "metadata": {
+                        "protocol": "mqtt",
+                        "payload": "json"
+                    },
+                    "value": "1053",
+                    "attr": "pressure"
+                  }
+                ]
+            }
++ Response 200 (application/json; charset=UTF-8)
+
+  This means that there is some history for some of the attributes, however for the used filter there is no data.
+
+  + body
+            {
+              "temperature":
+                [
+                ],
+              "pressure":
+                [
+                ]
+            }
+
++ Response 404 (application/json; charset=UTF-8)
+
+  This does not mean that there is no such device in the dojot, just that there is no history for that device yet.
+
+  + body
+
+            {
+              "title": "Device not found",
+              "description": "No data for the given device could be found"
+            }
+
++ Response 404 (application/json; charset=UTF-8)
+
+  This does not mean that there is no such attribute on the device, only that there is no history for that attribute yet.
+
+  + body
+
+            {
+                "title": "Attr not found",
+                "description": "No data for the given attribute could be found"
+            }
+
+
+## Group Retrieving notifications
+
+This endpoint retrieves all notifications generated by services. As each
+notification might have different attributes, it is possible to filter them
+and select only those needed by a particular application.
+
+## Get notifications from a tenant [/notifications/history?{field}={value}]
+
++ Parameters
+    + field: subject (optional, string) - Which field of the notifications will be filtered. If the field is in the metaAttrsFilter key, just pass the key itself.
+    + value: "user_notification" (optional, string) - Value that will be compared in the filter. If the value type is a string, pass it as "value", if it is int, pass it normally.
+
+
+### Get notifications from a tenant [GET]
++ Request (application/json)
+
+    + header
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+    + body
+
+            {
+                "notifications": [
+                    {
+                        "msgID": "0caa7ff1-c6c2-4171-8a58-6f6cf8e137d8",
+                        "metaAttrsFilter": {
+                          "level": 3,
+                          "shouldPersist": true
+                    },
+                    "message": "Something went wrong.",
+                    "subject": "user_notification",
+                    "ts": "2019-02-20T17:17:52.863000Z"
+                    }
+                ]
+            }
+
+
