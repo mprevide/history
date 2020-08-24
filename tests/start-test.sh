@@ -13,5 +13,5 @@ dredd --hookfiles "./tests/dredd-hooks/*hook.py" \
           --access-logfile - \
           --log-file - \
           --env PYTHONUNBUFFERED=1 -k gevent" \
---language python docs/test.apib http://127.0.0.1:8000
+--language python docs/history.apib http://127.0.0.1:8000
 fuser -k 5000/tcp
