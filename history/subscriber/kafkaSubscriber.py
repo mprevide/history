@@ -18,6 +18,7 @@ LOGGER = logging.getLogger('history.' + __name__)
 LOGGER.addHandler(logging.StreamHandler())
 LOGGER.setLevel(logging.INFO)
 
+
 class ConfigurationError(Exception):
     pass
 
@@ -26,12 +27,14 @@ class KafkaEventHandler(object):
     """
         Base callback structure for kafka events callbacks
     """
+
     def handle_event(self, message):
         """
             Handles a given kafka received message
             :param message The message that has been received
         """
         raise NotImplementedError("Abstract method called")
+
 
 class TenancyHandler(KafkaEventHandler):
 
@@ -54,10 +57,13 @@ class TenancyHandler(KafkaEventHandler):
             LOGGER.debug('Got list of tenants %s', payload)
             for tenant in payload['tenants']:
                 LOGGER.debug('initializing tenant %s', tenant)
-                TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device, DeviceHandler())
-                TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device_data, DataHandler(tenant))
+                TenancyHandler._spawn_watcher(
+                    tenant, conf.dojot_subject_device, DeviceHandler())
+                TenancyHandler._spawn_watcher(
+                    tenant, conf.dojot_subject_device_data, DataHandler(tenant))
         else:
-            LOGGER.error('Failed to retrieve list of existing tenants (%d)', response.status_code)
+            LOGGER.error(
+                'Failed to retrieve list of existing tenants (%d)', response.status_code)
             exit(1)
 
         return None
@@ -71,8 +77,10 @@ class TenancyHandler(KafkaEventHandler):
         LOGGER.debug('got tenancy event for tenant: %s', data['tenant'])
 
         tenant = data['tenant']
-        TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device, DeviceHandler())
-        TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device_data, DataHandler(tenant))
+        TenancyHandler._spawn_watcher(
+            tenant, conf.dojot_subject_device, DeviceHandler())
+        TenancyHandler._spawn_watcher(
+            tenant, conf.dojot_subject_device_data, DataHandler(tenant))
 
 
 class DeviceHandler(KafkaEventHandler):
@@ -89,14 +97,17 @@ class DeviceHandler(KafkaEventHandler):
         LOGGER.debug('got device event %s', message)
 
         if self.db is None:
-            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+            self.db = pymongo.MongoClient(
+                conf.db_host, replicaSet=conf.db_replica_set)
             self.db = self.db['device_history']
 
-        collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
+        collection_name = "{}_{}".format(
+            data['meta']['service'], data['data']['id'])
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING),
                                                ('attr', pymongo.DESCENDING)],
                                               unique=True)
-        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+        self.db[collection_name].create_index(
+            'ts', expireAfterSeconds=conf.db_expiration)
 
 
 class DataHandler(KafkaEventHandler):
@@ -106,8 +117,10 @@ class DataHandler(KafkaEventHandler):
 
     def _get_collection(self, message):
         if self.db is None:
-            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
-        collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
+            self.db = pymongo.MongoClient(
+                conf.db_host, replicaSet=conf.db_replica_set)
+        collection_name = "{}_{}".format(
+            self.service, message['metadata']['deviceid'])
         return self.db['device_history'][collection_name]
 
     @staticmethod
@@ -122,18 +135,20 @@ class DataHandler(KafkaEventHandler):
             else:
                 return datetime.utcfromtimestamp(float(timestamp))
         except ValueError as error:
-            LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
+            LOGGER.error(
+                "Failed to parse timestamp ({})\n{}".format(timestamp, error))
 
         try:
             return datetime.utcfromtimestamp(float(timestamp)/1000)
         except ValueError as error:
-            LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
+            LOGGER.error(
+                "Failed to parse timestamp ({})\n{}".format(timestamp, error))
 
         try:
             return parse(timestamp)
         except TypeError as error:
-            raise TypeError('Timestamp could not be parsed: {}\n{}'.format(timestamp, error))
-
+            raise TypeError(
+                'Timestamp could not be parsed: {}\n{}'.format(timestamp, error))
 
     def handle_event(self, message):
         """
@@ -144,18 +159,21 @@ class DataHandler(KafkaEventHandler):
         try:
             data = json.loads(message)
         except Exception as error:
-            LOGGER.error('Received event is not valid JSON. Ignoring\n%s', error)
+            LOGGER.error(
+                'Received event is not valid JSON. Ignoring\n%s', error)
             return
 
         LOGGER.debug('got data event %s', message)
 
         metadata = data.get('metadata', None)
         if metadata is None:
-            LOGGER.error('Received event has no metadata associated with it. Ignoring')
+            LOGGER.error(
+                'Received event has no metadata associated with it. Ignoring')
             return
         device_id = metadata.get('deviceid', None)
         if device_id is None:
-            LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
+            LOGGER.error(
+                'Received event cannot be traced to a valid device. Ignoring')
             return
 
         timestamp = DataHandler.parse_datetime(metadata.get('timestamp', None))
@@ -182,10 +200,14 @@ class DataHandler(KafkaEventHandler):
             try:
                 mongo = self._get_collection(data)
                 mongo.insert_many(docs)
+                LOGGER.info('mongo: insert_many')
+                LOGGER.info(docs)
             except Exception as error:
-                LOGGER.warn('Failed to persist received information.\n%s', error)
+                LOGGER.warn(
+                    'Failed to persist received information.\n%s', error)
         else:
-            LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
+            LOGGER.info(
+                'Got empty event from device [%s] - ignoring', device_id)
 
 
 class KafkaListener(Process):
@@ -218,25 +240,29 @@ class KafkaListener(Process):
                 self.consumer.seek_to_end()
                 done = True
             except AssertionError as error:
-                LOGGER.debug('ignoring assertion error [%s] %s', self.topic, error)
+                LOGGER.debug(
+                    'ignoring assertion error [%s] %s', self.topic, error)
                 # give kafka some time to assign us a partition
                 time.sleep(1)
 
-
     def run(self):
         start = time.time()
-        LOGGER.info('will create consumer %s %s %s', self.broker, self.group_id, self.topic)
-        self.consumer = KafkaConsumer(bootstrap_servers=self.broker, group_id=self.group_id)
+        LOGGER.info('will create consumer %s %s %s',
+                    self.broker, self.group_id, self.topic)
+        self.consumer = KafkaConsumer(
+            bootstrap_servers=self.broker, group_id=self.group_id)
         self.consumer.subscribe(topics=[self.topic])
         self.wait_init()
-        LOGGER.info('kafka consumer created %s - %s', self.topic, time.time() - start)
+        LOGGER.info('kafka consumer created %s - %s',
+                    self.topic, time.time() - start)
         for message in self.consumer:
             start = time.time()
             LOGGER.debug("Got kafka event [%s] %s", self.topic, message)
             try:
                 self.callback.handle_event(message.value)
             except Exception as error:
-                LOGGER.warn('Data handler raised an unknown exception. Ignoring. \n%s', error)
+                LOGGER.warn(
+                    'Data handler raised an unknown exception. Ignoring. \n%s', error)
 
             LOGGER.debug('done %s', time.time() - start)
 
@@ -256,6 +282,7 @@ def _get_token(service):
                              base64.b64encode(json.dumps(userinfo)),
                              base64.b64encode("signature"))
 
+
 def get_topic(service, subject, global_subject=False):
     """
         Given a service and a subject, retrieve its associated kakfa topic
@@ -272,18 +299,22 @@ def get_topic(service, subject, global_subject=False):
     response = requests.get(target, headers={"authorization": jwt}, timeout=3)
     if 200 <= response.status_code < 300:
         payload = response.json()
-        LOGGER.debug('topic acquisition took %s [%s]', time.time() - start, payload['topic'])
+        LOGGER.debug(
+            'topic acquisition took %s [%s]', time.time() - start, payload['topic'])
         return payload['topic']
 
     raise ConfigurationError("Topic retrieval error: {} {}".format(response.status_code,
                                                                    response.reason))
 
+
 if __name__ == '__main__':
     # Spawns tenancy management thread
     try:
-        tenancy_topic = get_topic(conf.dojot_service_management, conf.dojot_subject_tenancy, True)
+        tenancy_topic = get_topic(
+            conf.dojot_service_management, conf.dojot_subject_tenancy, True)
         handler = TenancyHandler()
-        tenant_watcher = KafkaListener(tenancy_topic, handler, name="tenancy-watcher")
+        tenant_watcher = KafkaListener(
+            tenancy_topic, handler, name="tenancy-watcher")
         tenant_watcher.start()
         handler.tenants_bootstrap()
         tenant_watcher.join()
@@ -292,6 +323,7 @@ if __name__ == '__main__':
         for child in children:
             LOGGER.warn("Terminating [{}] ...".format(child.name))
             child.terminate()
-        LOGGER.error("Failed to bootstrap tenants's consumers:\n{}".format(error))
+        LOGGER.error(
+            "Failed to bootstrap tenants's consumers:\n{}".format(error))
         LOGGER.critical("Exiting.")
         exit(1)
