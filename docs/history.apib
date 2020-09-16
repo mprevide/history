@@ -11,10 +11,22 @@ Note: The dates on this service use ISO 8601.
 
 # Group Retrieve data from attributes
 
-This endpoint retrieves the last values associated to a device. The query
+This endpoint retrieves the last (or first) values associated to a device. The query
 string might select more than one attribute. For instance:
+
 `?lastN=3&attr=temperature,pressure` will return the last 3 values from both
 `temperature` and `pressure` attributes.
+
+`?firstN=3&attr=temperature,pressure` will return the first 3 values (the oldest ones) from both
+`temperature` and `pressure` attributes.
+
+__Note that__ when the `firstN` parameter is informed, the query returns the
+first records that were inserted in the database, that is, the oldest ones are
+returned first in the list. In this way, we have an ascending order in relation
+to the timestamp.<br>
+When the `lastN` parameter is informed, the query returns the last records that
+were inserted in the database, that is, the newest ones are returned first in
+the list. In this way, we have a descending order in relation to the timestamp.
 
 If no query string is set, then all values from all attributes are returned.
 
@@ -95,17 +107,17 @@ If no query string is set, then all values from all attributes are returned.
                 "description": "No data for the given attribute could be found"
             }
 
-## Filter by last N values and somes attributes  [/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}]
+## Filter by first N values and somes attributes  [/device/{device_id}/history?firstN={firstN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}]
 
 + Parameters
     + device_id:b374a5 (required, string) - Device identifier
     + attr:`temperature,pressure` (optional, string) - Device attribute to be requested. If not used, returns all attributes. (It can be a comma-separated list of attributes.)
-    + dateFrom:`2018-06-05T18:00:00Z` (optional, string) - Start time of a time-based query
+    + dateFrom:`2010-01-01T00:00:00Z` (optional, string) - Start time of a time-based query
     + dateTo:`2018-06-15T18:00:00Z` (optional, string) - End time of a time-based query
-    + lastN:3 (optional, number) - Number of most current values (valid for each attribute, if more than one). You can use lastN with or without dateFrom/dateTo.
+    + firstN:3 (optional, number) - Number of oldest values (valid for each attribute, if more than one). You can use firstN with or without dateFrom/dateTo.
 
 
-### Filter by last N values and somes attributes [GET]
+### Filter by first N values and somes attributes [GET]
 
 + Request (application/json)
   + Headers
@@ -120,17 +132,17 @@ If no query string is set, then all values from all attributes are returned.
                 [
                   {
                     "device_id": "b374a5",
-                    "ts": "2018-02-14T13:43:33.306000Z",
+                    "ts": "2010-01-01T10:11:22.306000Z",
                     "metadata": {
                         "protocol": "mqtt",
                         "payload": "json"
                     },
-                    "value": "22.12",
+                    "value": "24.10",
                     "attr": "temperature"
                   },
                   {
                     "device_id": "b374a5",
-                    "ts": "2018-02-14T13:42:33.306000Z",
+                    "ts": "2010-01-01T10:12:22.306000Z",
                     "metadata": {
                         "protocol": "mqtt",
                         "payload": "json"
@@ -140,12 +152,12 @@ If no query string is set, then all values from all attributes are returned.
                   },
                   {
                     "device_id": "b374a5",
-                    "ts": "2018-02-14T13:41:33.306000Z",
+                    "ts": "2010-01-01T10:13:22.306000Z",
                     "metadata": {
                         "protocol": "mqtt",
                         "payload": "json"
                     },
-                    "value": "24.10",
+                    "value": "22.12",
                     "attr": "temperature"
                   }
                 ],
@@ -153,17 +165,17 @@ If no query string is set, then all values from all attributes are returned.
                 [
                   {
                     "device_id": "b374a5",
-                    "ts": "2018-02-14T13:43:33.306000Z",
+                    "ts": "2010-01-01T10:11:22.306000Z",
                     "metadata": {
                         "protocol": "mqtt",
                         "payload": "json"
                     },
-                    "value": "1013",
+                    "value": "1053",
                     "attr": "pressure"
                   },
                   {
                     "device_id": "b374a5",
-                    "ts": "2018-02-14T13:42:33.306000Z",
+                    "ts": "2010-01-01T10:12:22.306000Z",
                     "metadata": {
                         "protocol": "mqtt",
                         "payload": "json"
@@ -173,12 +185,12 @@ If no query string is set, then all values from all attributes are returned.
                   },
                   {
                     "device_id": "b374a5",
-                    "ts": "2018-02-14T13:41:33.306000Z",
+                    "ts": "2010-01-01T10:13:22.306000Z",
                     "metadata": {
                         "protocol": "mqtt",
                         "payload": "json"
                     },
-                    "value": "1053",
+                    "value": "1013",
                     "attr": "pressure"
                   }
                 ]

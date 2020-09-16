@@ -5,13 +5,28 @@ from history.api.models import DeviceHistory, HistoryUtil
 
 class TestDeviceHistory:
     
-    def test_parse_request(self):
+    def test_parse_request1(self):
+        request = MagicMock()
+        request.params.keys.return_value = ['firstN', 'dateFrom', 'dateTo']
+        req_content = {"firstN": 2, "dateFrom": "20190901", "dateTo": "20190910"}
+        request.params.__getitem__.side_effect = lambda key: req_content[key]
+        assert DeviceHistory.parse_request(request, 'test')
+
+    def test_parse_request2(self):
         request = MagicMock()
         request.params.keys.return_value = ['lastN','dateFrom','dateTo']
         req_content = {"lastN":2,"dateFrom":"20190901" ,"dateTo":"20190910"}
         request.params.__getitem__.side_effect = lambda key: req_content[key]
         assert DeviceHistory.parse_request(request,'test')
     
+    def test_parse_request_invalid_firstN(self):
+        with pytest.raises(falcon.HTTPInvalidParam):
+            request = MagicMock()
+            request.params.keys.return_value = ['firstN', 'dateFrom', 'dateTo']
+            req_content = {"firstN": "test"}
+            request.params.__getitem__.side_effect = lambda key: req_content[key]
+            DeviceHistory.parse_request(request, "test")
+
     def test_parse_request_invalid_lastN(self):
         with pytest.raises(falcon.HTTPInvalidParam):
             request = MagicMock()
