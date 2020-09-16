@@ -5,11 +5,11 @@ data. For more information about the usage, check the [API documentation](https:
 
 ## About History
 
-The history service is used when a device historical data needs to be retrieved, but it can also be utilized via HTTP request 
+The history service is used when a device historical data needs to be retrieved, but it can also be utilized via HTTP request
 employing different filters, like deviceId, number of entries to be listed and starting date, as in the following example:
 
 ```shell
-http://host:port/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}
+http://host:port/device/{device_id}/history?lastN|firstN={lastN|firstN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}
 ```
 
 ### Dependencies
@@ -69,7 +69,7 @@ Another alternative is to use **docker** to run the service. To build the
 container, from the repository's root:
 
 ```shell
-# you may need sudo on your machine: 
+# you may need sudo on your machine:
 # https://docs.docker.com/engine/installation/linux/linux-postinstall/
 docker build -t <tag-for-history-docker> -f docker/history.docker .
 ```
@@ -192,7 +192,7 @@ Another alternative is to use **docker** to run the service. To build the
 container, from the repository's root:
 
 ```shell
-# you may need sudo on your machine: 
+# you may need sudo on your machine:
 # https://docs.docker.com/engine/installation/linux/linux-postinstall/
 docker build -t <tag-for-persister-docker> -f docker/persister.docker .
 ```

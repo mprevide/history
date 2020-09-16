@@ -117,7 +117,17 @@ class DeviceHistory(object):
         """ returns mongo compatible query object, based on the query params provided """
         logger.debug('DeviceHistory.parse_request [start]')
 
-        if 'lastN' in request.params.keys():
+        limit_val = False
+        sort = [('ts', pymongo.DESCENDING)]
+
+        if 'firstN' in request.params.keys():
+            try:
+                limit_val = int(request.params['firstN'])
+                sort = [('ts', pymongo.ASCENDING)]
+            except ValueError as e:
+                logger.error(e)
+                raise falcon.HTTPInvalidParam('Must be integer.', 'firstN')
+        elif 'lastN' in request.params.keys():
             try:
                 limit_val = int(request.params['lastN'])
             except ValueError as e:
@@ -129,11 +139,10 @@ class DeviceHistory(object):
             except ValueError as e:
                 logger.error(e)
                 raise falcon.HTTPInvalidParam('Must be integer.', 'hLimit')
-        else:
-            limit_val = False
 
         if attr:
             query = {'attr': attr, 'value': {'$ne': ' '}}
+
         ts_filter = {}
         if 'dateFrom' in request.params.keys():
             ts_filter['$gte'] = dateutil.parser.parse(request.params['dateFrom'])
@@ -143,8 +152,6 @@ class DeviceHistory(object):
             query['ts'] = ts_filter
 
         ls_filter = {"_id": False, '@timestamp': False, '@version': False}
-        sort = [('ts', pymongo.DESCENDING)]
-
         req = {'query': query, 'limit': limit_val, 'filter': ls_filter, 'sort': sort}
 
         logger.debug('DeviceHistory.parse_request [return]')
