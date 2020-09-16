@@ -12,27 +12,30 @@ class TestPersister:
     def test_handle_notification_no_timestamp(self):
         # raises exception because does not have "timestamp"
         with pytest.raises(Exception):
-            p = Persister()        
-            message = json.dumps({"ts": 1567704621, "metaAttrsFilter": {"shouldPersist": False}})
+            p = Persister()
+            message = json.dumps(
+                {"ts": 1567704621, "metaAttrsFilter": {"shouldPersist": False}})
             p.handle_notification('admin', message)
-    
+
     def test_handle_notification_not_persisting(self):
-        p = Persister()        
-        message = json.dumps({"timestamp": 1567704621, "metaAttrsFilter": {"shouldPersist": False}})
+        p = Persister()
+        message = json.dumps(
+            {"timestamp": 1567704621, "metaAttrsFilter": {"shouldPersist": False}})
         p.handle_notification('admin', message)
-    
+
     def test_handle_notification_invalid_json(self):
-        p = Persister()        
+        p = Persister()
         message = "This is a string"
         assert p.handle_notification('admin', message) is None
-    
+
     def test_handle_notification_persisting(self):
-        p = Persister()        
-        message = json.dumps({"timestamp": 1567704621, "metaAttrsFilter": {"shouldPersist": True}})
+        p = Persister()
+        message = json.dumps(
+            {"timestamp": 1567704621, "metaAttrsFilter": {"shouldPersist": True}})
         p.handle_notification('admin', message)
 
     # Testing handle_new_tenant
-    
+
     @patch.object(Persister, 'create_index_for_tenant')
     def test_handle_new_tenant(self, mock_index_for_tenant):
         message = json.dumps({"tenant": "normal"})
@@ -41,7 +44,7 @@ class TestPersister:
         assert mock_index_for_tenant.called
 
     # Testing handle_event_devices
-    
+
     @patch.object(Persister, 'create_indexes')
     def test_handle_event_devices_create(self, mock_create_indexes):
         message = json.dumps({
@@ -74,19 +77,22 @@ class TestPersister:
         assert Persister.handle_event_data(self, 'admin', message) is None
 
     def test_handle_event_data_no_device_id(self):
-        message = json.dumps({"data": {"foo": "bar"}, "metadata": {"deviceid": None}})
+        message = json.dumps(
+            {"data": {"attrs": {"foo": "bar"}}, "metadata": {"deviceid": None}})
         assert Persister.handle_event_data(self, 'admin', message) is None
-    
+
     def test_handle_event_data_no_timestamp(self):
+
         with pytest.raises(AttributeError):
-            message = json.dumps({"data": {"foo": "bar"}, "metadata": {"deviceid": "labtemp"}})
+            message = json.dumps(
+                {"data": {"attrs": {"foo": "bar"}}, "metadata": {"deviceid": "labtemp"}})
             Persister.handle_event_data(self, 'admin', message)
-    
+
     def test_handle_event_data_attrs_no_dict(self):
         message = json.dumps({
             "attrs": 80,
             "metadata": {"deviceid": "labtemp", "timestamp": 1567704621, "tenant": "admin"}
-            })
+        })
         p = Persister()
         p.handle_event_data('admin', message)
 
@@ -94,27 +100,27 @@ class TestPersister:
         message = json.dumps({
             "attrs": {"foo": "bar"},
             "metadata": {"deviceid": "labtemp", "timestamp": 1567704621, "tenant": "admin"}
-            })
+        })
         p = Persister()
         p.handle_event_data('admin', message)
 
     # Testing parse_datetime
-    
+
     def test_parse_datetime_error(self):
         with pytest.raises(TypeError):
             p = Persister()
             p.parse_datetime('1567704621')
 
     # Testing parse_message
-    
+
     def test_parse_message(self):
-        data = dict({"data":{
-                "id": "testid",
-                "attrs": {
+        data = dict({"data": {
+            "id": "testid",
+            "attrs": {
                     "foo": "bar"
-                }},
+                    }},
             "meta": {"timestamp": 1567704621, "service": "admin"}
-            })
+        })
         expected_data = json.dumps({
             "attrs": {"foo": "bar"},
             "metadata":
@@ -128,7 +134,7 @@ class TestPersister:
         p = Persister()
         p.create_index_for_tenant('admin')
         assert mock_create_indexes.called
-    
+
     @patch.object(Persister, 'create_indexes')
     def test_create_index_for_notifications(self, mock_create_index):
         p = Persister()
