@@ -78,14 +78,13 @@ class TestPersister:
 
     def test_handle_event_data_no_device_id(self):
         message = json.dumps(
-            {"data": {"attrs": {"foo": "bar"}}, "metadata": {"deviceid": None}})
+            {"attrs": {"foo": "bar"}, "metadata": {"deviceid": None}})
         assert Persister.handle_event_data(self, 'admin', message) is None
 
     def test_handle_event_data_no_timestamp(self):
-
         with pytest.raises(AttributeError):
             message = json.dumps(
-                {"data": {"attrs": {"foo": "bar"}}, "metadata": {"deviceid": "labtemp"}})
+                {"attrs": {"foo": "bar"}, "metadata": {"deviceid": "labtemp"}})
             Persister.handle_event_data(self, 'admin', message)
 
     def test_handle_event_data_attrs_no_dict(self):
